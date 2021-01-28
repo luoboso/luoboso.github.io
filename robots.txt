@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Allow: /archives/
+Allow: /categories/
+Allow: /tags/
+Allow: /record/
+Disallow: /links/
+Sitemap: https://luoboso.github.io/baidusitemap.xml

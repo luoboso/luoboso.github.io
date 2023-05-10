@@ -6,7 +6,7 @@
   <link href="http://luoboso.github.io/atom.xml" rel="self"/>
   
   <link href="http://luoboso.github.io/"/>
-  <updated>2023-05-08T08:50:11.936Z</updated>
+  <updated>2023-05-10T09:05:41.321Z</updated>
   <id>http://luoboso.github.io/</id>
   
   <author>
@@ -15,6 +15,35 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>我的腳是10號半</title>
+    <link href="http://luoboso.github.io/posts/05092023-2c2c029818f7.html"/>
+    <id>http://luoboso.github.io/posts/05092023-2c2c029818f7.html</id>
+    <published>2023-05-09T14:39:00.000Z</published>
+    <updated>2023-05-10T09:05:41.321Z</updated>
+    
+    <content type="html"><![CDATA[<p><img src="/images/230509.jpg"></p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;p&gt;&lt;img src=&quot;/images/230509.jpg&quot;&gt;&lt;/p&gt;
+</summary>
+      
+    
+    
+    
+    <category term="絮絮叨叨" scheme="http://luoboso.github.io/categories/%E7%B5%AE%E7%B5%AE%E5%8F%A8%E5%8F%A8/"/>
+    
+    <category term="112全運會" scheme="http://luoboso.github.io/categories/%E7%B5%AE%E7%B5%AE%E5%8F%A8%E5%8F%A8/112%E5%85%A8%E9%81%8B%E6%9C%83/"/>
+    
+    
+    <category term="我的腳是10號半" scheme="http://luoboso.github.io/tags/%E6%88%91%E7%9A%84%E8%85%B3%E6%98%AF10%E8%99%9F%E5%8D%8A/"/>
+    
+    <category term="0509" scheme="http://luoboso.github.io/tags/0509/"/>
+    
+  </entry>
   
   <entry>
     <title>今年的百岳首發</title>
@@ -578,33 +607,6 @@
     <category term="0415" scheme="http://luoboso.github.io/tags/0415/"/>
     
     <category term="dodo馬" scheme="http://luoboso.github.io/tags/dodo%E9%A6%AC/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>菁英落選頭，賽後點心拔頭籌！</title>
-    <link href="http://luoboso.github.io/posts/04142023-2839e7e5b9b1.html"/>
-    <id>http://luoboso.github.io/posts/04142023-2839e7e5b9b1.html</id>
-    <published>2023-04-14T14:39:00.000Z</published>
-    <updated>2023-04-19T07:00:22.568Z</updated>
-    
-    <content type="html"><![CDATA[<p><img src="/images/230414.jpg"></p>]]></content>
-    
-    
-      
-      
-    <summary type="html">&lt;p&gt;&lt;img src=&quot;/images/230414.jpg&quot;&gt;&lt;/p&gt;
-</summary>
-      
-    
-    
-    
-    <category term="絮絮叨叨" scheme="http://luoboso.github.io/categories/%E7%B5%AE%E7%B5%AE%E5%8F%A8%E5%8F%A8/"/>
-    
-    <category term="112全運會" scheme="http://luoboso.github.io/categories/%E7%B5%AE%E7%B5%AE%E5%8F%A8%E5%8F%A8/112%E5%85%A8%E9%81%8B%E6%9C%83/"/>
-    
-    
-    <category term="0414" scheme="http://luoboso.github.io/tags/0414/"/>
     
   </entry>
   

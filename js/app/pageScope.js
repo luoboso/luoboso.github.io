@@ -1,0 +1,1 @@
+let appController=null,pageController=null;export const getAppSignal=()=>(appController||(appController=new AbortController),appController.signal);export const createPageScope=()=>(pageController&&pageController.abort(),(pageController=new AbortController).signal);export const abortPageScope=()=>{pageController&&(pageController.abort(),pageController=null)};

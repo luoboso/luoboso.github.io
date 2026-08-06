@@ -1,0 +1,1 @@
+const t=new Set,normalizeKey=e=>String(e).trim().replace(/[^a-zA-Z0-9]/g,"_");export const onceGlobal=(e,n)=>{if("function"!=typeof n)return;const o=normalizeKey(e);t.has(o)||(t.add(o),n())};export const oncePerElement=(e,t,n)=>{if(!e||"function"!=typeof n)return;const o=`redefine${normalizeKey(t)}`;e.dataset[o]||(e.dataset[o]="true",n(e))};

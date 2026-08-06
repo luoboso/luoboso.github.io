@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>蘿泥蔔說 - Facebook 同步管理</title>
+  <meta name="description" content="Facebook 粉絲頁貼文同步管理介面">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Auth Screen -->
+  <div id="auth-screen" class="screen">
+    <div class="auth-card">
+      <div class="auth-logo">🔄</div>
+      <h1>蘿泥蔔說</h1>
+      <p class="auth-subtitle">Facebook 同步管理</p>
+      <div class="auth-form">
+        <label for="github-token">GitHub Personal Access Token</label>
+        <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
+        <p class="auth-hint">需要 <code>repo</code> scope 權限</p>
+        <button id="auth-btn" class="btn btn-primary">登入</button>
+        <p id="auth-error" class="error-text" hidden></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app-screen" class="screen" hidden>
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <h1 class="header-title">🔄 蘿泥蔔說</h1>
+        <span class="header-subtitle">Facebook 同步管理</span>
+      </div>
+      <div class="header-right">
+        <div class="sync-status" id="sync-status">
+          <span class="status-dot"></span>
+          <span class="status-text">載入中...</span>
+        </div>
+        <button id="refresh-btn" class="btn btn-ghost" title="重新整理">⟳</button>
+        <button id="logout-btn" class="btn btn-ghost" title="登出">登出</button>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="pending">
+        📋 待審核 <span class="badge" id="pending-count">0</span>
+      </button>
+      <button class="tab" data-tab="published">
+        ✅ 已發布 <span class="badge" id="published-count">0</span>
+      </button>
+      <button class="tab" data-tab="rejected">
+        ❌ 不發布 <span class="badge" id="rejected-count">0</span>
+      </button>
+      <button class="tab" data-tab="articles">
+        📖 文章管理 <span class="badge" id="articles-count">0</span>
+      </button>
+    </nav>
+
+    <!-- Content Area -->
+    <div class="content-area">
+      <!-- Post List -->
+      <aside class="post-list" id="post-list">
+        <div class="list-header">
+          <label class="select-all">
+            <input type="checkbox" id="select-all-checkbox">
+            <span>全選</span>
+          </label>
+          <span class="list-info" id="list-info"></span>
+        </div>
+        <div class="list-filter-bar" id="list-filter-bar">
+          <input type="text" id="search-input" placeholder="🔍 搜尋標題...">
+          <div class="sort-container">
+            <span>排序:</span>
+            <select id="sort-select">
+              <option value="date-desc">🕒 時間：最新優先</option>
+              <option value="date-asc">🕒 時間：最舊優先</option>
+              <option value="title-asc">🔤 標題：A-Z</option>
+              <option value="title-desc">🔤 標題：Z-A</option>
+            </select>
+          </div>
+        </div>
+        <div class="list-actions-bar" id="list-actions-bar" style="padding: 0.5rem 1rem; border-bottom: 1px solid var(--border-color); display: flex; gap: 0.5rem;" hidden>
+          <button id="export-csv-btn" class="btn btn-sm btn-ghost">📤 匯出 CSV</button>
+          <button id="import-csv-btn" class="btn btn-sm btn-ghost">📥 匯入 CSV</button>
+          <input type="file" id="csv-file-input" accept=".csv" style="display:none">
+        </div>
+        <div class="list-body" id="list-body">
+          <!-- Posts rendered here -->
+        </div>
+      </aside>
+
+      <!-- Editor Panel -->
+      <main class="editor-panel" id="editor-panel">
+        <div class="editor-empty" id="editor-empty">
+          <div class="empty-icon">📝</div>
+          <p>選擇一篇貼文開始編輯</p>
+        </div>
+        <div class="editor-content" id="editor-content" hidden>
+          <!-- Title -->
+          <div class="field-group">
+            <label for="edit-title">📝 標題</label>
+            <input type="text" id="edit-title" placeholder="文章標題">
+            <button id="regenerate-title-btn" class="btn btn-sm btn-ghost" title="重新生成標題">🤖 重新生成</button>
+          </div>
+
+          <!-- Date (Editable only for Articles) -->
+          <div class="field-group" id="edit-date-group" hidden>
+            <label for="edit-date">📅 發布時間</label>
+            <input type="text" id="edit-date" placeholder="YYYY/MM/DD HH:mm:ss">
+          </div>
+
+          <!-- Categories -->
+          <div class="field-group">
+            <label for="edit-category">📂 分類</label>
+            <select id="edit-category">
+              <option value="">選擇分類</option>
+            </select>
+          </div>
+
+          <!-- Tags -->
+          <div class="field-group">
+            <label for="edit-tags">🏷️ Tags</label>
+            <input type="text" id="edit-tags" placeholder="用逗號分隔，例如: 0315, 練習, 心得">
+          </div>
+
+          <!-- Description (SEO) -->
+          <div class="field-group">
+            <label for="edit-description">📄 摘要 (SEO)</label>
+            <textarea id="edit-description" rows="2" placeholder="文章摘要，用於搜尋引擎和社群分享"></textarea>
+            <button id="regenerate-description-btn" class="btn btn-sm btn-ghost" title="重新生成摘要">🤖 重新生成</button>
+          </div>
+
+          <!-- SEO Score -->
+          <div class="seo-score" id="seo-score">
+            <h3>📊 SEO 評分</h3>
+            <div class="seo-items" id="seo-items">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Content Preview -->
+          <div class="field-group" id="content-preview-group">
+            <label>📖 內容預覽</label>
+            <div class="content-preview" id="content-preview">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Content Editor (Editable only for Articles) -->
+          <div class="field-group" id="edit-content-group" hidden>
+            <label for="edit-content">✍️ 內文 (Markdown)</label>
+            <textarea id="edit-content" rows="16" placeholder="文章 Markdown 內容..."></textarea>
+          </div>
+
+          <!-- Images Preview -->
+          <div class="field-group" id="images-section" hidden>
+            <label>🖼️ 圖片</label>
+            <div class="images-preview" id="images-preview">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Meta Info -->
+          <div class="meta-info">
+            <span>📅 <span id="meta-date"></span></span>
+            <span>🔗 <a id="meta-fb-link" href="#" target="_blank">Facebook 原文</a></span>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Action Bar -->
+    <footer class="action-bar" id="action-bar">
+      <div class="action-left">
+        <span id="selected-count">已選 0 篇</span>
+      </div>
+      <div class="action-right">
+        <button id="reject-btn" class="btn btn-danger" disabled>
+          ❌ 標記不發布
+        </button>
+        <button id="restore-btn" class="btn btn-warning" disabled hidden>
+          ↩️ 恢復為待審核
+        </button>
+        <button id="batch-edit-btn" class="btn btn-warning" disabled hidden>
+          ✏️ 批次修改
+        </button>
+        <button id="publish-btn" class="btn btn-primary" disabled>
+          ✅ 發布選中
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Batch Edit Modal -->
+  <div class="modal-overlay" id="batch-edit-modal" hidden>
+    <div class="modal">
+      <h2>批次修改選中文章</h2>
+      <p style="margin-bottom:1rem; color:var(--text-muted)">僅會修改您勾選並填寫的欄位，未勾選的欄位將保持原狀。</p>
+      
+      <div class="modal-body">
+        <div style="display:flex; flex-direction:column; gap:1rem">
+          <!-- Batch Category -->
+          <div style="border: 1px solid var(--border-color); padding: 1rem; border-radius: 8px">
+            <label style="display:flex; align-items:center; gap:0.5rem; font-weight:600; margin-bottom:0.5rem">
+              <input type="checkbox" id="batch-change-category-check">
+              <span>統一修改分類</span>
+            </label>
+            <div style="display:flex; gap:0.5rem">
+              <select id="batch-category" disabled style="flex:1">
+                <option value="">選擇分類</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Batch Tags -->
+          <div style="border: 1px solid var(--border-color); padding: 1rem; border-radius: 8px">
+            <label style="display:flex; align-items:center; gap:0.5rem; font-weight:600; margin-bottom:0.5rem">
+              <input type="checkbox" id="batch-change-tags-check">
+              <span>統一修改標籤 (Tags)</span>
+            </label>
+            <input type="text" id="batch-tags" placeholder="用逗號分隔，例如: 0315, 練習, 心得" disabled style="width:100%">
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer" style="margin-top:1.5rem">
+        <button id="cancel-batch-btn" class="btn btn-ghost">取消</button>
+        <button id="confirm-batch-btn" class="btn btn-primary">確認修改</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Publish Modal -->
+  <div class="modal-overlay" id="publish-modal" hidden>
+    <div class="modal">
+      <h2>確認發布</h2>
+      <div class="modal-body" id="publish-modal-body">
+        <!-- Content rendered dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button id="cancel-publish-btn" class="btn btn-ghost">取消</button>
+        <button id="confirm-publish-btn" class="btn btn-primary">確認發布</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loading-overlay" hidden>
+    <div class="loading-spinner"></div>
+    <p class="loading-text" id="loading-text">處理中...</p>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="config.js"></script>
+  <script src="csv-helper.js"></script>
+  <script src="github-api.js"></script>
+  <script src="markdown-gen.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Allow: /archives/
+Allow: /categories/
+Allow: /tags/
+Allow: /on-this-day/
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://luoboso.github.io/sitemap.xml
+Sitemap: https://luoboso.github.io/atom.xml
+
+# Crawl-delay (optional, prevents server overload)
+Crawl-delay: 1

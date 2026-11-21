@@ -1,0 +1,1 @@
+var e=null,t=null;function n(){return e||=fetch(`/api/records.json`).then(e=>{if(!e.ok)throw Error(`HTTP ${e.status}`);return e.json()}).catch(t=>{throw e=null,t}),e}function r(){return t||=fetch(`/api/on-this-day.json`).then(e=>{if(!e.ok)throw Error(`HTTP ${e.status}`);return e.json()}).catch(e=>{throw t=null,e}),t}export{r as n,n as t};

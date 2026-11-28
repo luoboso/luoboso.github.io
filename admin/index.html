@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="text-scale" content="scale">
+  <title>蘿泥蔔說 - Facebook 同步管理</title>
+  <meta name="description" content="Facebook 粉絲頁貼文同步管理介面">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Auth Screen -->
+  <div id="auth-screen" class="screen">
+    <div class="auth-card">
+      <div class="auth-logo" aria-hidden="true">🔄</div>
+      <h1 id="auth-heading">蘿泥蔔說</h1>
+      <p class="auth-subtitle">Facebook 同步管理</p>
+      <p class="required-legend">標示 <span aria-hidden="true">*</span> 為必填欄位。</p>
+      <form id="auth-form" class="auth-form" action="#" method="post" aria-labelledby="auth-heading">
+        <div class="token-label-row">
+          <label for="github-token">GitHub Personal Access Token <span aria-hidden="true">*</span></label>
+          <button
+            type="button"
+            id="toggle-token-btn"
+            class="btn btn-sm btn-ghost"
+            aria-pressed="false"
+            aria-label="顯示 Token"
+            aria-describedby="toggle-token-warning"
+          >顯示</button>
+          <span id="toggle-token-warning" class="visually-hidden">注意：這會在畫面上顯示您的 Token。</span>
+        </div>
+        <input
+          type="password"
+          id="github-token"
+          name="github_token"
+          placeholder="ghp_xxxxxxxxxxxx"
+          autocomplete="current-password"
+          autocorrect="off"
+          autocapitalize="none"
+          spellcheck="false"
+          enterkeyhint="done"
+          required
+          aria-describedby="token-hint"
+          data-error="token-required-error"
+        >
+        <div id="token-required-error" class="error-msg">
+          <span role="img" aria-label="錯誤">❌</span> 請輸入 GitHub Personal Access Token。
+        </div>
+        <p id="token-hint" class="auth-hint">需要 <code>repo</code> scope 權限</p>
+        <button type="submit" id="auth-btn" class="btn btn-primary" style="width: 100%; justify-content: center;">登入後台</button>
+        <p id="auth-error" class="error-text" role="alert" hidden></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app-screen" class="screen" hidden>
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <h1 class="header-title"><span aria-hidden="true">🔄</span> 蘿泥蔔說</h1>
+        <span class="header-subtitle">Facebook 同步管理</span>
+      </div>
+      <div class="header-right">
+        <div class="sync-status" id="sync-status" role="status" aria-live="polite">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span class="status-text">載入中...</span>
+        </div>
+        <button type="button" id="refresh-btn" class="btn btn-ghost" aria-label="重新整理列表" title="重新整理">⟳</button>
+        <button type="button" id="logout-btn" class="btn btn-ghost" title="登出">登出</button>
+      </div>
+    </header>
+
+    <!-- Tabs (role="tablist" for in-page view switching, NOT <nav>) -->
+    <div class="tabs" id="tabs" role="tablist" aria-label="貼文與文章狀態分類">
+      <button type="button" role="tab" id="tab-pending" aria-selected="true" tabindex="0" class="tab active" data-tab="pending">
+        <span aria-hidden="true">📋</span> 待審核 <span class="badge" id="pending-count">0</span>
+      </button>
+      <button type="button" role="tab" id="tab-published" aria-selected="false" tabindex="-1" class="tab" data-tab="published">
+        <span aria-hidden="true">✅</span> 已發布 <span class="badge" id="published-count">0</span>
+      </button>
+      <button type="button" role="tab" id="tab-rejected" aria-selected="false" tabindex="-1" class="tab" data-tab="rejected">
+        <span aria-hidden="true">❌</span> 不發布 <span class="badge" id="rejected-count">0</span>
+      </button>
+      <button type="button" role="tab" id="tab-articles" aria-selected="false" tabindex="-1" class="tab" data-tab="articles">
+        <span aria-hidden="true">📖</span> 文章管理 <span class="badge" id="articles-count">0</span>
+      </button>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content-area">
+      <!-- Post List -->
+      <aside class="post-list" id="post-list" aria-label="貼文清單">
+        <div class="list-header">
+          <div class="select-all">
+            <input type="checkbox" id="select-all-checkbox" name="select_all">
+            <label for="select-all-checkbox">全選</label>
+          </div>
+          <span class="list-info" id="list-info" role="status" aria-live="polite"></span>
+        </div>
+        <search class="list-filter-bar" id="list-filter-bar" aria-label="文章搜尋與排序">
+          <div class="filter-field">
+            <label for="search-input" class="filter-label">搜尋標題或內文</label>
+            <input
+              type="search"
+              id="search-input"
+              name="q"
+              placeholder="🔍 輸入關鍵字..."
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="none"
+              spellcheck="false"
+              enterkeyhint="search"
+            >
+          </div>
+          <div class="sort-container">
+            <label for="sort-select">排序：</label>
+            <select id="sort-select" name="sort">
+              <option value="date-desc">🕒 時間：最新優先</option>
+              <option value="date-asc">🕒 時間：最舊優先</option>
+              <option value="featured-only">⭐ 篩選：只看精選/重要文章</option>
+              <option value="title-asc">🔤 標題：A-Z</option>
+              <option value="title-desc">🔤 標題：Z-A</option>
+            </select>
+          </div>
+        </search>
+        <div class="list-actions-bar" id="list-actions-bar" style="padding: 0.5rem 1rem; border-bottom: 1px solid var(--border-color); display: flex; gap: 0.5rem;" hidden>
+          <button type="button" id="export-csv-btn" class="btn btn-sm btn-ghost">📤 匯出 CSV</button>
+          <button type="button" id="import-csv-btn" class="btn btn-sm btn-ghost">📥 匯入 CSV</button>
+          <input type="file" id="csv-file-input" accept=".csv" class="visually-hidden" tabindex="-1">
+        </div>
+        <div class="list-body" id="list-body">
+          <!-- Posts rendered here -->
+        </div>
+      </aside>
+
+      <!-- Editor Panel -->
+      <main class="editor-panel" id="editor-panel">
+        <div class="editor-empty" id="editor-empty">
+          <div class="empty-icon" aria-hidden="true">📝</div>
+          <p>選擇一篇貼文開始編輯</p>
+        </div>
+        <div class="editor-content" id="editor-content" hidden>
+          <!-- Title -->
+          <div class="field-group">
+            <label for="edit-title">📝 標題</label>
+            <input type="text" id="edit-title" name="title" placeholder="文章標題">
+            <button type="button" id="regenerate-title-btn" class="btn btn-sm btn-ghost" title="重新生成標題">🤖 重新生成</button>
+          </div>
+
+          <!-- Date (Editable only for Articles) -->
+          <div class="field-group" id="edit-date-group" hidden>
+            <label for="edit-date">📅 發布時間（格式：YYYY/MM/DD HH:mm:ss）</label>
+            <input type="text" id="edit-date" name="date" placeholder="2026/01/15 08:30:00" autocorrect="off" spellcheck="false">
+          </div>
+
+          <!-- Quick Lazy Classification -->
+          <fieldset class="field-group fieldset-reset">
+            <legend class="field-legend">⚡ 懶人一鍵歸類（點一下自動設好分類與首頁專區）</legend>
+            <div class="quick-type-bar" id="quick-type-bar" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.35rem;">
+              <button type="button" class="btn btn-sm btn-ghost quick-type-btn" data-qtype="daily" aria-pressed="false">☕ 日常隨筆</button>
+              <button type="button" class="btn btn-sm btn-ghost quick-type-btn" data-qtype="race" aria-pressed="false">🏆 重要賽事回顧</button>
+              <button type="button" class="btn btn-sm btn-ghost quick-type-btn" data-qtype="thought" aria-pressed="false">💡 認真想法 / 週記</button>
+              <button type="button" class="btn btn-sm btn-ghost quick-type-btn" data-qtype="qa" aria-pressed="false">💬 你問我答</button>
+              <button type="button" class="btn btn-sm btn-ghost quick-type-btn" data-qtype="hiking" aria-pressed="false">⛰️ 登山百岳</button>
+              <button type="button" class="btn btn-sm btn-ghost" id="toggle-featured-btn" aria-pressed="false" title="標記後方便年底回顧與首頁精選">☆ 加入年度精選</button>
+            </div>
+          </fieldset>
+
+          <!-- Categories -->
+          <div class="field-group">
+            <label for="edit-category">📂 分類</label>
+            <select id="edit-category" name="category">
+              <option value="">選擇分類</option>
+            </select>
+          </div>
+
+          <!-- Tags -->
+          <div class="field-group">
+            <label for="edit-tags">🏷️ Tags（以逗號分隔）</label>
+            <input type="text" id="edit-tags" name="tags" placeholder="例如: 0315, 練習, 心得">
+          </div>
+
+          <!-- Description (SEO) -->
+          <div class="field-group">
+            <label for="edit-description">📄 摘要 (SEO)</label>
+            <textarea id="edit-description" name="description" rows="2" placeholder="文章摘要，用於搜尋引擎和社群分享"></textarea>
+            <button type="button" id="regenerate-description-btn" class="btn btn-sm btn-ghost" title="重新生成摘要">🤖 重新生成</button>
+          </div>
+
+          <!-- SEO Score -->
+          <div class="seo-score" id="seo-score">
+            <h2>📊 SEO 評分</h2>
+            <div class="seo-items" id="seo-items">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Content Preview -->
+          <div class="field-group" id="content-preview-group">
+            <div class="field-legend">📖 內容預覽</div>
+            <div class="content-preview" id="content-preview">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Content Editor (Editable only for Articles) -->
+          <div class="field-group" id="edit-content-group" hidden>
+            <label for="edit-content">✍️ 內文 (Markdown)</label>
+            <textarea id="edit-content" name="content" rows="16" placeholder="文章 Markdown 內容..."></textarea>
+          </div>
+
+          <!-- Images Preview -->
+          <div class="field-group" id="images-section" hidden>
+            <div class="field-legend">🖼️ 圖片</div>
+            <div class="images-preview" id="images-preview">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Meta Info -->
+          <div class="meta-info">
+            <span><span aria-hidden="true">📅</span> <span id="meta-date"></span></span>
+            <span><span aria-hidden="true">🔗</span> <a id="meta-fb-link" href="#" target="_blank" rel="noopener noreferrer">Facebook 原文</a></span>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Action Bar -->
+    <footer class="action-bar" id="action-bar">
+      <div class="action-left">
+        <span id="selected-count" role="status" aria-live="polite">已選 0 篇</span>
+      </div>
+      <div class="action-right">
+        <button type="button" id="reject-btn" class="btn btn-danger" disabled>
+          ❌ 標記不發布
+        </button>
+        <button type="button" id="restore-btn" class="btn btn-warning" disabled hidden>
+          ↩️ 恢復為待審核
+        </button>
+        <button type="button" id="batch-edit-btn" class="btn btn-warning" disabled hidden>
+          ✏️ 批次修改
+        </button>
+        <button type="button" id="publish-btn" class="btn btn-primary" disabled>
+          ✅ 發布選中
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Batch Edit Modal (Native <dialog> with showModal & light-dismiss) -->
+  <dialog class="admin-dialog" id="batch-edit-modal" closedby="any" aria-labelledby="batch-modal-title">
+    <div class="modal">
+      <h2 id="batch-modal-title">批次修改選中文章</h2>
+      <p style="margin-bottom:1rem; color:var(--text-secondary)">僅會修改您勾選並填寫的欄位，未勾選的欄位將保持原狀。</p>
+
+      <div class="modal-body">
+        <div style="display:flex; flex-direction:column; gap:1rem">
+          <!-- Batch Category -->
+          <div style="border: 1px solid var(--border-color); padding: 1rem; border-radius: 8px">
+            <div style="display:flex; align-items:center; gap:0.5rem; font-weight:600; margin-bottom:0.5rem">
+              <input type="checkbox" id="batch-change-category-check" name="batch_change_cat">
+              <label for="batch-change-category-check" style="margin:0; cursor:pointer">統一修改分類</label>
+            </div>
+            <div style="display:flex; gap:0.5rem">
+              <label for="batch-category" class="visually-hidden">批次目標分類</label>
+              <select id="batch-category" name="batch_category" disabled style="flex:1">
+                <option value="">選擇分類</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Batch Tags -->
+          <div style="border: 1px solid var(--border-color); padding: 1rem; border-radius: 8px">
+            <div style="display:flex; align-items:center; gap:0.5rem; font-weight:600; margin-bottom:0.5rem">
+              <input type="checkbox" id="batch-change-tags-check" name="batch_change_tags">
+              <label for="batch-change-tags-check" style="margin:0; cursor:pointer">統一修改標籤 (Tags)</label>
+            </div>
+            <label for="batch-tags" class="visually-hidden">批次目標標籤（以逗號分隔）</label>
+            <input type="text" id="batch-tags" name="batch_tags" placeholder="用逗號分隔，例如: 0315, 練習, 心得" disabled style="width:100%">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="margin-top:1.5rem">
+        <form method="dialog" style="display:contents">
+          <button type="submit" id="cancel-batch-btn" class="btn btn-ghost">取消</button>
+        </form>
+        <button type="button" id="confirm-batch-btn" class="btn btn-primary">確認修改</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Publish Modal (Native <dialog> with showModal & light-dismiss) -->
+  <dialog class="admin-dialog" id="publish-modal" closedby="any" aria-labelledby="publish-modal-title">
+    <div class="modal">
+      <h2 id="publish-modal-title">確認發布</h2>
+      <div class="modal-body" id="publish-modal-body">
+        <!-- Content rendered dynamically -->
+      </div>
+      <div class="modal-footer">
+        <form method="dialog" style="display:contents">
+          <button type="submit" id="cancel-publish-btn" class="btn btn-ghost">取消</button>
+        </form>
+        <button type="button" id="confirm-publish-btn" class="btn btn-primary">確認發布</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loading-overlay" role="status" aria-live="polite" hidden>
+    <div class="loading-spinner" aria-hidden="true"></div>
+    <p class="loading-text" id="loading-text">處理中...</p>
+  </div>
+
+  <!-- Toast Region & Screen Reader Live Announcer -->
+  <div class="toast-container" id="toast-container" role="region" aria-label="系統通知"></div>
+  <p class="visually-hidden">系統狀態與表單通知</p>
+  <div id="sr-announcer" class="visually-hidden" aria-live="polite"></div>
+
+  <script src="config.js"></script>
+  <script src="csv-helper.js"></script>
+  <script src="github-api.js"></script>
+  <script src="markdown-gen.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
